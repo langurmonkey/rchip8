@@ -13,6 +13,8 @@ mod debug;
 const SPEED_INSTRUCT_SEC: u128 = 700;
 const INSTRUCTION_TIME_NS: u128 = (1e9 as u128 / SPEED_INSTRUCT_SEC) as u128;
 
+const PROGRAM_LOC: usize = 0x200;
+
 // RAM size in B
 const RAM_SIZE: usize = 4096;
 // Stack size in number of 16 b units
@@ -57,7 +59,7 @@ fn main() {
     // Current index of the top of the stack
     let mut istack: usize = 0;
     // Program counter
-    let mut pc: usize = 80;
+    let mut pc: usize = PROGRAM_LOC;
     // Delay timer: 8 b
     let mut delay_timer: u8 = 0;
     // Sound timer: 8 b
@@ -95,9 +97,12 @@ fn main() {
     // Read the whole file
     let bytes = f.read_to_end(&mut buffer).unwrap();
     // Copy to memory
-    let ppos = 80 + bytes;
-    ram[80..ppos].copy_from_slice(&buffer[0..bytes]);
-    println!("Program loaded into memory: {} b [{}..{}]", bytes, 80, ppos);
+    let ppos = PROGRAM_LOC + bytes;
+    ram[PROGRAM_LOC..ppos].copy_from_slice(&buffer[0..bytes]);
+    println!(
+        "Program loaded into memory: {} b [{}..{}]",
+        bytes, PROGRAM_LOC, ppos
+    );
 
     // Internal variables
     let start: u128 = time_nanos();
@@ -145,7 +150,7 @@ fn main() {
             let nn = inst & 0x00FF;
             let nnn = inst & 0x0FFF;
 
-            println!("pc:          {}", pc - 2);
+            println!("pc:          {} (0x{:04x})", pc - 2, pc - 2);
             println!("{}", debug::debug_instr(code, x, y, n, nn, nnn));
             println!("instr:       0x{:04x}", inst);
             println!("code:        0x{:04x}", code);

@@ -27,7 +27,7 @@ pub fn debug_instr(code: u16, x: usize, y: usize, n: u16, nn: u16, nnn: u16) -> 
         // ANNN - set index register to NNN
         0xA000 => format!("I := {}", nnn),
         // DXYN - display/draw
-        0xD000 => format!("DRAW [{},{}] <- {}", x, y, n),
+        0xD000 => format!("DRAW [V{},V{}] <- {}", x, y, n),
         _ => format!(""),
     }
     .to_string()
