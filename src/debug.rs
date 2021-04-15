@@ -1,3 +1,18 @@
+use std::io::{stdin, stdout, Read, Write};
+
+pub fn debug(pc: usize, instr: u16, code: u16, x: usize, y: usize, n: u16, nn: u16, nnn: u16) {
+    println!("pc:          {} (0x{:04x})", pc - 2, pc - 2);
+    println!("{}", debug_instr(code, x, y, n, nn, nnn));
+    println!("instr:       0x{:04x}", instr);
+    println!("code:        0x{:04x}", code);
+    println!("x:           0x{:04x} ({})", x, x);
+    println!("y:           0x{:04x} ({})", y, y);
+    println!("n:           0x{:04x} ({})", n, y);
+    println!("nn:          0x{:04x} ({})", nn, nn);
+    println!("nnn:         0x{:04x} ({})", nnn, nnn);
+    pause();
+}
+
 pub fn debug_instr(code: u16, x: usize, y: usize, n: u16, nn: u16, nnn: u16) -> String {
     match code {
         // 00E0 - clear screen
@@ -31,4 +46,11 @@ pub fn debug_instr(code: u16, x: usize, y: usize, n: u16, nn: u16, nnn: u16) -> 
         _ => format!(""),
     }
     .to_string()
+}
+
+fn pause() {
+    let mut stdout = stdout();
+    stdout.write(b"Press Enter to continue").unwrap();
+    stdout.flush().unwrap();
+    stdin().read(&mut [0]).unwrap();
 }

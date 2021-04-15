@@ -2,8 +2,6 @@ use crate::constants;
 use crate::debug;
 use crate::time;
 
-use std::io::{stdin, stdout, Read, Write};
-
 // Models the CHIP-8 machine
 pub struct Chip8 {
     // RAM memory: 4 kB
@@ -129,26 +127,17 @@ impl Chip8 {
                     panic!("Reached the end!");
                 }
                 // RUN INSTRUCTION
-                let inst: u16 = ((self.ram[self.pc] as u16) << 8) | self.ram[self.pc + 1] as u16;
+                let instr: u16 = ((self.ram[self.pc] as u16) << 8) | self.ram[self.pc + 1] as u16;
                 self.pc += 2;
 
-                let code = inst & 0xF000;
-                let x = ((inst & 0x0F00) >> 8) as usize;
-                let y = ((inst & 0x00F0) >> 4) as usize;
-                let n = inst & 0x000F;
-                let nn = inst & 0x00FF;
-                let nnn = inst & 0x0FFF;
+                let code = instr & 0xF000;
+                let x = ((instr & 0x0F00) >> 8) as usize;
+                let y = ((instr & 0x00F0) >> 4) as usize;
+                let n = instr & 0x000F;
+                let nn = instr & 0x00FF;
+                let nnn = instr & 0x0FFF;
 
-                println!("pc:          {} (0x{:04x})", self.pc - 2, self.pc - 2);
-                println!("{}", debug::debug_instr(code, x, y, n, nn, nnn));
-                println!("instr:       0x{:04x}", inst);
-                println!("code:        0x{:04x}", code);
-                println!("x:           0x{:04x} ({})", x, x);
-                println!("y:           0x{:04x} ({})", y, y);
-                println!("n:           0x{:04x} ({})", n, y);
-                println!("nn:          0x{:04x} ({})", nn, nn);
-                println!("nnn:         0x{:04x} ({})", nnn, nnn);
-                Chip8::pause();
+                debug::debug(self.pc, instr, code, x, y, n, nn, nnn);
 
                 match code {
                     // 00E0 - clear screen
@@ -221,12 +210,5 @@ impl Chip8 {
                 last_instruction_t = t;
             }
         }
-    }
-
-    fn pause() {
-        let mut stdout = stdout();
-        stdout.write(b"Press Enter to continue...").unwrap();
-        stdout.flush().unwrap();
-        stdin().read(&mut [0]).unwrap();
     }
 }
