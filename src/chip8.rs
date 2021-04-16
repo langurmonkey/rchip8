@@ -6,6 +6,7 @@ use rand::random;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use sdl2::EventPump;
+use std::process;
 
 // Emulates the CHIP-8 machine
 pub struct Chip8 {
@@ -108,7 +109,7 @@ impl Chip8 {
             stack,
             istack,
             pc,
-            dt,
+            dt: 255,
             st,
             display,
             display_update_flag: false,
@@ -127,7 +128,7 @@ impl Chip8 {
         // TIMERS
         // Decrement delay_timer and sound_timer 60 times per second
         // if their value is > 0
-        if t - self.last_timer_t > 16_666 {
+        if t - self.last_timer_t > 16_666_666 {
             if self.dt > 0 {
                 self.dt -= 1;
             }
@@ -136,11 +137,6 @@ impl Chip8 {
             }
             self.last_timer_t = t;
         }
-
-        // LOG SPEED
-        // let spf: f64 = (dt as f64) * 1.0e-9;
-        // let fps: f64 = 1.0 / spf;
-        // println!("Frame time: {} s, Frame rate: {} Hz", spf, fps);
 
         // INTERPRET
 
@@ -382,6 +378,11 @@ impl Chip8 {
                                 }
                                 if code.is_some() {
                                     let sc = Scancode::from_keycode(code.unwrap()).unwrap();
+                                    if sc == Scancode::Escape || sc == Scancode::CapsLock {
+                                        // Terminate
+                                        println!("Bye!");
+                                        process::exit(0);
+                                    }
                                     let c = keyboard::unmap(sc);
                                     if c.is_some() {
                                         break c.unwrap();

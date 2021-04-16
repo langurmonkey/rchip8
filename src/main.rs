@@ -108,6 +108,10 @@ fn main() {
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
+                }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::CapsLock),
+                    ..
                 } => break 'mainloop,
                 _ => {}
             }
@@ -124,4 +128,5 @@ fn main() {
             display.render(chip8.display);
         }
     }
+    println!("Bye!");
 }
