@@ -1,6 +1,6 @@
-# CHIP-8 emulator
+# rCHIP8, a CHIP-8 emulator
 
-`rchip8` is a [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator written in Rust and SDL2.
+**rCHIP8** is a [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator written in Rust and SDL2.
 
 ![](test-results.jpg)
 ![](cavern.jpg)
@@ -15,7 +15,13 @@ cargo build --release
 
 ## Running
 
-You can go ahead and run the executable created in the building step, which is under `target/release/rchip8`. Or you can just run using cargo, with optionally the `--release` target enabled:
+You can go ahead and run the executable created in the building step, which is under `target/release/rchip8`:
+
+```bash
+target/release/rchip8 [ROM_FILE]
+```
+
+Or you can just run it with cargo, with the `--release` target enabled:
 
 ```bash
 cargo run --release -- [ROM_FILE]
@@ -23,11 +29,11 @@ cargo run --release -- [ROM_FILE]
 
 ## Display scaling
 
-This implementation supports an integer display scaling factor, which makes the window larger by that factor. Use it with `-s [FACTOR]`.
+This implementation supports an integer display scale factor to make the display larger. Use it with `-s [FACTOR]`.
 
 ## Debug
 
-You can enable debug mode with `-d`. In this mode, the program halts before every instruction and prints the instruction itself, the decoded operation, the value of each register and the value of the index I.
+Enable debug mode with `-d`. In this mode, the program halts before every instruction and prints the instruction itself, the decoded operation, the value of each register and the value of the index I.
 
 ## Speed
 
