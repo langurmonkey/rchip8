@@ -15,7 +15,7 @@ badd +1 src/constants.rs
 badd +4 src/render.rs
 badd +60 src/display.rs
 badd +12 Cargo.toml
-badd +1 README.md
+badd +5 README.md
 badd +34 src/keyboard.rs
 argglobal
 %argdel
@@ -92,30 +92,6 @@ exe s:l
 normal! zt
 317
 normal! 039|
-lcd ~/Projects/rchip8
-tabedit ~/Projects/rchip8/README.md
-set splitbelow splitright
-wincmd t
-set winminheight=0
-set winheight=1
-set winminwidth=0
-set winwidth=1
-argglobal
-setlocal fdm=manual
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=0
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-silent! normal! zE
-let s:l = 5 - ((4 * winheight(0) + 27) / 55)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-5
-normal! 021|
 lcd ~/Projects/rchip8
 tabedit ~/Projects/rchip8/src/keyboard.rs
 set splitbelow splitright
