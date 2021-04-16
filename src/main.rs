@@ -1,58 +1,84 @@
 mod chip8;
 mod constants;
 mod debug;
+mod display;
 mod time;
 
+extern crate clap;
 extern crate sdl2;
 
+use clap::{App, Arg};
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
 use std::fs::File;
 use std::io::prelude::*;
 use std::{env, process};
 
 use chip8::Chip8;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
-use std::time::Duration;
+use display::Display;
 
 // Simple CHIP8 emulator
 // MIT license
 
-fn print_help() {
-    println!("Usage: rchip8 [ROM_FILE]");
-}
-
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let matches = App::new("R-CHIP-8")
+        .version("0.1.0")
+        .author("Toni Sagrsità Sellés <me@tonisagrista.com>")
+        .about("CHIP-8 emulator")
+        .arg(
+            Arg::with_name("input")
+                .required(true)
+                .index(1)
+                .help("ROM file to load and run"),
+        )
+        .arg(
+            Arg::with_name("debug")
+                .short("d")
+                .long("debug")
+                .takes_value(false)
+                .help("Run in debug mode - pauses after each instruction, prints info to stdout"),
+        )
+        .get_matches();
 
-    if args.len() == 1 {
-        print_help();
-        process::exit(1);
-    }
+    let filename = matches.value_of("input").unwrap();
     // Read ROM
-    println!("Reading ROM file: {}", args[1]);
-    let mut f = File::open(&args[1]).unwrap();
+    println!("Reading ROM file: {}", filename);
+    let mut f = File::open(filename).unwrap();
     let mut rom = Vec::new();
     f.read_to_end(&mut rom).unwrap();
 
+    // Start time
+    let start: u128 = time::time_nanos();
+
+    // Create the display
+    let mut display = Display::initialize("R-CHIP-8");
+    display.clear();
+
     // Create the machine
-    let mut chip8 = Chip8::initialize(rom);
+    let debug_mode = matches.occurrences_of("debug") > 0;
+    println!("Debug: {}", debug_mode);
+    let mut chip8 = Chip8::initialize(rom, start, debug_mode);
 
-    // let sdl_context = sdl2::init().unwrap();
-    // let video_subsystem = sdl_context.video().unwrap();
+    // Main loop
+    'mainloop: loop {
+        let t: u128 = time::time_nanos();
+        // Run the machine
+        chip8.cycle(t);
 
-    // let window = video_subsystem
-    //     .window("rust-sdl2 demo", 800, 600)
-    //     .position_centered()
-    //     .build()
-    //     .unwrap();
+        for event in display.event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'mainloop,
+                _ => {}
+            }
+        }
 
-    // let mut canvas = window.into_canvas().build().unwrap();
-
-    // canvas.set_draw_color(Color::RGB(0, 255, 255));
-    // canvas.clear();
-    //canvas.present();
-
-    // Run the machine
-    chip8.run();
+        // Update display if needed
+        if chip8.display_flag {
+            display.render(chip8.display);
+        }
+    }
 }
