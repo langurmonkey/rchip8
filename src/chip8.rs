@@ -22,8 +22,10 @@ pub struct Chip8 {
     pub sound_timer: u8,
     // Display memory
     pub display: [u8; constants::DISPLAY_LEN],
-    // Flag: must update display data
-    pub display_flag: bool,
+    // Flag: update display (draw has been called)
+    pub display_update_flag: bool,
+    // Flag: clear display
+    pub display_clear_flag: bool,
     // Flag: run in debug mode
     debug_mode: bool,
     // Last timer time
@@ -101,7 +103,8 @@ impl Chip8 {
             delay_timer,
             sound_timer,
             display,
-            display_flag: false,
+            display_update_flag: false,
+            display_clear_flag: false,
             debug_mode,
             last_timer_t: start_t,
             last_instruction_t: start_t,
@@ -110,7 +113,8 @@ impl Chip8 {
 
     // Runs a CPU cycle with the given current time t [ns]
     pub fn cycle(&mut self, t: u128) {
-        self.display_flag = false;
+        self.display_update_flag = false;
+        self.display_clear_flag = false;
         // TIMERS
         // Decrement delay_timer and sound_timer 60 times per second
         // if their value is > 0
@@ -139,6 +143,7 @@ impl Chip8 {
             let instr: u16 = ((self.ram[self.pc] as u16) << 8) | self.ram[self.pc + 1] as u16;
             self.pc += 2;
 
+            // INSTRUCTION: 0xIXYN // 0x00NN // 0x0NNN
             let code = instr & 0xF000;
             let x = ((instr & 0x0F00) >> 8) as usize;
             let y = ((instr & 0x00F0) >> 4) as usize;
@@ -147,72 +152,99 @@ impl Chip8 {
             let nnn = instr & 0x0FFF;
 
             if self.debug_mode {
-                debug::debug(self.pc, instr, code, x, y, n, nn, nnn);
+                debug::debug(
+                    self.pc,
+                    instr,
+                    code,
+                    x,
+                    y,
+                    n,
+                    nn,
+                    nnn,
+                    self.registers,
+                    self.index,
+                );
             }
 
             match code {
-                // 00E0 - clear screen
-                0x0000 => self.display.iter_mut().for_each(|m| *m = 0),
-                // 1NNN - jump
+                // 00E0 - CLS
+                0x0000 => {
+                    self.display.iter_mut().for_each(|m| *m = 0);
+                    self.display_clear_flag = true;
+                }
+                // 1NNN - JMP
                 0x1000 => self.pc = nnn as usize,
-                // 6XNN - set register VX to NN
+                // 6XNN - LD  VX, NN
                 0x6000 => self.registers[x] = nn as u8,
-                // 7XNN - add NN to register VX
+                // 7XNN - ADD  VX, NN
                 0x7000 => self.registers[x] += nn as u8,
-                0x800 => {
+                0x8000 => {
                     match n {
-                        // 8XY0 - VX := VY
+                        // 8XY0 - LD VX, VY
                         0 => self.registers[x] = self.registers[y],
-                        // 8XY1 - VX := VX OR VY
+                        // 8XY1 - OR VX, VY
                         1 => self.registers[x] = self.registers[x] | self.registers[y],
-                        // 8XY2 - VX := VX AND VY
+                        // 8XY2 - AND VX, VY
                         2 => self.registers[x] = self.registers[x] & self.registers[y],
-                        // 8XY3 - VX := VX XOR VY
+                        // 8XY3 - XOR VX, VY
                         3 => self.registers[x] = self.registers[x] ^ self.registers[y],
-                        // 8XY4 - VX := VX + VY
-                        4 => self.registers[x] = self.registers[x] + self.registers[y],
+                        // 8XY4 - ADD VX, VY
+                        4 => {
+                            let res = self.registers[x] as usize + self.registers[y] as usize;
+                            if res > 255 {
+                                // Carry to VF
+                                self.registers[0x0F] = 1;
+                            } else {
+                                self.registers[0x0F] = 0;
+                            }
+                            self.registers[x] = res as u8;
+                        }
                         // Default
                         _ => (),
                     }
                 }
-                // ANNN - set index register to NNN
+                // ANNN - LD  I, NNN
                 0xA000 => self.index = nnn,
-                // DXYN - display/draw
+                // DXYN - DRW  VX, VY, N
                 0xD000 => {
-                    let mut xpos: usize = self.registers[x] as usize % constants::DISPLAY_WIDTH;
-                    let mut ypos: usize = self.registers[y] as usize % constants::DISPLAY_HEIGHT;
-                    let pixel = self.display[y * constants::DISPLAY_WIDTH + x];
                     self.registers[0x0F] = 0;
-                    for _ in 0..n {
-                        let byte: u8 = self.ram[self.index as usize];
-                        for bit in 0..8 {
-                            let mask: u8 = 1 << bit;
+                    let xpos: usize = self.registers[x] as usize % constants::DISPLAY_WIDTH;
+                    let ypos: usize = self.registers[y] as usize % constants::DISPLAY_HEIGHT;
+                    for row in 0..n {
+                        // Fetch byte
+                        let byte: u8 = self.ram[(self.index + row) as usize];
+                        // Current Y
+                        let cy = ypos + row as usize;
+                        // Loop over bits
+                        for col in 0..8_usize {
+                            // Current X
+                            let cx = xpos + col;
+                            let pixel = self.display[cy * constants::DISPLAY_WIDTH + cx];
+                            let mask: u8 = 0x01 << 7 - col;
                             if byte & mask != 0 {
                                 // Bit is on
                                 if pixel != 0 {
                                     // Display pixel is on
-                                    self.display[y * constants::DISPLAY_WIDTH + x] = 0;
+                                    self.display[cy * constants::DISPLAY_WIDTH + cx] = 0;
                                     self.registers[0x0F] = 1;
                                 } else {
                                     // Display pixel is off
-                                    self.display[y * constants::DISPLAY_WIDTH + x] = 1;
+                                    self.display[cy * constants::DISPLAY_WIDTH + cx] = 1;
                                 }
                             } else {
                                 // Bit is off
                             }
-                            if xpos == constants::DISPLAY_WIDTH - 1 {
+                            if cx == constants::DISPLAY_WIDTH - 1 {
                                 // Reached the right edge
                                 break;
                             }
-                            xpos += 1;
                         }
-                        if ypos == constants::DISPLAY_HEIGHT - 1 {
+                        if cy == constants::DISPLAY_HEIGHT - 1 {
                             // Reached the bottom edge
                             break;
                         }
-                        ypos += 1;
                     }
-                    self.display_flag = true;
+                    self.display_update_flag = true;
                 }
                 // Default
                 _ => (),

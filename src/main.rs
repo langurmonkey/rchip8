@@ -52,7 +52,6 @@ fn main() {
 
     // Create the display
     let mut display = Display::initialize("R-CHIP-8");
-    display.clear();
 
     // Create the machine
     let debug_mode = matches.occurrences_of("debug") > 0;
@@ -62,9 +61,8 @@ fn main() {
     // Main loop
     'mainloop: loop {
         let t: u128 = time::time_nanos();
-        // Run the machine
-        chip8.cycle(t);
 
+        // Event loop
         for event in display.event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -76,8 +74,14 @@ fn main() {
             }
         }
 
-        // Update display if needed
-        if chip8.display_flag {
+        // Run the machine
+        chip8.cycle(t);
+
+        // Clear/update display if needed
+        if chip8.display_clear_flag {
+            display.clear();
+        }
+        if chip8.display_update_flag {
             display.render(chip8.display);
         }
     }

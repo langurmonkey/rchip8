@@ -1,4 +1,4 @@
-use crate::constants as cnst;
+use crate::constants;
 
 use sdl2::rect::Rect;
 use sdl2::{pixels::Color, EventPump};
@@ -18,8 +18,8 @@ impl Display {
         let window = video_subsystem
             .window(
                 window_title,
-                (cnst::DISPLAY_WIDTH * cnst::DISPLAY_SCALE) as u32,
-                (cnst::DISPLAY_HEIGHT * cnst::DISPLAY_SCALE) as u32,
+                (constants::DISPLAY_WIDTH * constants::DISPLAY_SCALE) as u32,
+                (constants::DISPLAY_HEIGHT * constants::DISPLAY_SCALE) as u32,
             )
             .position_centered()
             .build()
@@ -42,13 +42,13 @@ impl Display {
     }
 
     // Renders the given buffer to the display
-    pub fn render(&mut self, buffer: [u8; cnst::DISPLAY_LEN]) {
+    pub fn render(&mut self, buffer: [u8; constants::DISPLAY_LEN]) {
         // Fill with buffer
         self.canvas.set_draw_color(self.col);
-        let scl = cnst::DISPLAY_SCALE;
-        for x in 0..cnst::DISPLAY_WIDTH {
-            for y in 0..cnst::DISPLAY_HEIGHT {
-                if buffer[y * cnst::DISPLAY_WIDTH + x] != 0 {
+        let scl = constants::DISPLAY_SCALE;
+        for x in 0..constants::DISPLAY_WIDTH {
+            for y in 0..constants::DISPLAY_HEIGHT {
+                if buffer[y * constants::DISPLAY_WIDTH + x] != 0 {
                     // Paint!
                     self.canvas.fill_rect(Rect::new(
                         (x * scl) as i32,
