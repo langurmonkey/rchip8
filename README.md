@@ -3,6 +3,7 @@
 `rchip8` is a [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator written in Rust and SDL2.
 
 ![](test-results.jpg)
+![](cavern.jpg)
 
 ## Building
 
