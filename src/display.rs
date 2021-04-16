@@ -9,6 +9,7 @@ pub struct Display {
     pub event_pump: EventPump,
     pub scale: u32,
     pub col: Color,
+    pub bgcol: Color,
 }
 
 impl Display {
@@ -32,13 +33,14 @@ impl Display {
             canvas,
             event_pump,
             scale,
-            col: Color::RGB(200, 200, 200),
+            col: Color::RGB(50, 130, 195),
+            bgcol: Color::RGB(30, 30, 30),
         }
     }
 
     // Clears the display to black
     pub fn clear(&mut self) {
-        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
+        self.canvas.set_draw_color(self.bgcol);
         self.canvas.clear();
         self.canvas.present();
     }
@@ -46,12 +48,23 @@ impl Display {
     // Renders the given buffer to the display
     pub fn render(&mut self, buffer: [u8; constants::DISPLAY_LEN]) {
         // Fill with buffer
-        self.canvas.set_draw_color(self.col);
         let scl = self.scale as usize;
         for x in 0..constants::DISPLAY_WIDTH {
             for y in 0..constants::DISPLAY_HEIGHT {
-                if buffer[y * constants::DISPLAY_WIDTH + x] != 0 {
-                    // Paint!
+                if buffer[y * constants::DISPLAY_WIDTH + x] > 0 {
+                    // Foreground
+                    self.canvas.set_draw_color(self.col);
+                    self.canvas
+                        .fill_rect(Rect::new(
+                            (x * scl) as i32,
+                            (y * scl) as i32,
+                            scl as u32,
+                            scl as u32,
+                        ))
+                        .unwrap();
+                } else {
+                    // Background
+                    self.canvas.set_draw_color(self.bgcol);
                     self.canvas
                         .fill_rect(Rect::new(
                             (x * scl) as i32,

@@ -301,29 +301,30 @@ impl Chip8 {
                     let xpos: usize = self.registers[x] as usize % constants::DISPLAY_WIDTH;
                     let ypos: usize = self.registers[y] as usize % constants::DISPLAY_HEIGHT;
                     for row in 0..n {
-                        // Fetch byte
-                        let byte: u8 = self.ram[(self.index + row) as usize];
+                        // Fetch bits
+                        let bits: u8 = self.ram[(self.index + row) as usize];
                         // Current Y
-                        let cy = ypos + row as usize;
+                        let cy = (ypos + row as usize) % constants::DISPLAY_HEIGHT;
                         // Loop over bits
                         for col in 0..8_usize {
                             // Current X
-                            let cx = xpos + col;
-                            let pixel = self.display[cy * constants::DISPLAY_WIDTH + cx];
+                            let cx = (xpos + col) % constants::DISPLAY_WIDTH;
+                            let current_color = self.display[cy * constants::DISPLAY_WIDTH + cx];
                             let mask: u8 = 0x01 << 7 - col;
+                            let color = bits & mask;
                             // XOR
                             // 0 0 -> 0
                             // 0 1 -> 1
                             // 1 0 -> 1
                             // 1 1 -> 0
-                            if byte & mask != 0 {
-                                // Bit is on
-                                if pixel != 0 {
-                                    // Display pixel is on
+                            if color > 0 {
+                                // color is on
+                                if current_color > 0 {
+                                    // current color is on
                                     self.display[cy * constants::DISPLAY_WIDTH + cx] = 0;
                                     self.registers[0x0F] = 1;
                                 } else {
-                                    // Display pixel is off
+                                    // current color is off
                                     self.display[cy * constants::DISPLAY_WIDTH + cx] = 1;
                                 }
                             } else {
