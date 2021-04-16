@@ -29,28 +29,28 @@ fn main() {
             Arg::with_name("input")
                 .required(true)
                 .index(1)
-                .help("ROM file to load and run."),
+                .help("ROM file to load and run"),
         )
         .arg(
             Arg::with_name("debug")
                 .short("d")
                 .long("debug")
                 .takes_value(false)
-                .help("Run in debug mode. Pauses after each instruction, prints info to stdout."),
+                .help("Run in debug mode. Pauses after each instruction, prints info to stdout"),
         )
         .arg(
             Arg::with_name("scale")
                 .short("s")
                 .long("scale")
                 .takes_value(true)
-                .help("Integer display scaling, by default it is set to 15. If set to 1, the display is set to 64x32 pixels."),
+                .help("Integer display scale factor, defaults to 15"),
         )
         .arg(
             Arg::with_name("ips")
                 .short("i")
                 .long("ips")
                 .takes_value(true)
-                .help("Emulation speed in instructions per second. Default value is 1000."),
+                .help("Emulation speed in instructions per second, defaults to 1000"),
         )
         .get_matches();
 
