@@ -2,6 +2,8 @@
 
 `rchip8` is a [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator written in Rust.
 
+![](test-results.jpg)
+
 ## Building
 
 To compile for release, just do:
