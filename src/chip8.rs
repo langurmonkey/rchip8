@@ -311,6 +311,11 @@ impl Chip8 {
                             let cx = xpos + col;
                             let pixel = self.display[cy * constants::DISPLAY_WIDTH + cx];
                             let mask: u8 = 0x01 << 7 - col;
+                            // XOR
+                            // 0 0 -> 0
+                            // 0 1 -> 1
+                            // 1 0 -> 1
+                            // 1 1 -> 0
                             if byte & mask != 0 {
                                 // Bit is on
                                 if pixel != 0 {
@@ -323,6 +328,7 @@ impl Chip8 {
                                 }
                             } else {
                                 // Bit is off
+                                // Do nothing
                             }
                             if cx == constants::DISPLAY_WIDTH - 1 {
                                 // Reached the right edge
