@@ -29,14 +29,21 @@ fn main() {
             Arg::with_name("input")
                 .required(true)
                 .index(1)
-                .help("ROM file to load and run"),
+                .help("ROM file to load and run."),
         )
         .arg(
             Arg::with_name("debug")
                 .short("d")
                 .long("debug")
                 .takes_value(false)
-                .help("Run in debug mode - pauses after each instruction, prints info to stdout"),
+                .help("Run in debug mode. Pauses after each instruction, prints info to stdout."),
+        )
+        .arg(
+            Arg::with_name("scale")
+                .short("s")
+                .long("scale")
+                .takes_value(true)
+                .help("Set the integer scaling of the display, by default it is set to 15. If set to 1, the display is set to 64x32 pixels."),
         )
         .get_matches();
 
@@ -47,11 +54,23 @@ fn main() {
     let mut rom = Vec::new();
     f.read_to_end(&mut rom).unwrap();
 
+    // Scaling
+    let scl_str = matches.value_of("scale").unwrap_or("15");
+    let scl_res = scl_str.parse::<u32>();
+    let mut scale: u32 = 15;
+    match scl_res {
+        Ok(n) => scale = n,
+        Err(e) => println!(
+            "The scale ({}) is not a valid unsigned integer, using default",
+            scl_str
+        ),
+    }
+
     // Start time
     let start: u128 = time::time_nanos();
 
     // Create the display
-    let mut display = Display::initialize("R-CHIP-8");
+    let mut display = Display::initialize("R-CHIP-8", scale);
 
     // Create the machine
     let debug_mode = matches.occurrences_of("debug") > 0;

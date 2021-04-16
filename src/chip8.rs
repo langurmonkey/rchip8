@@ -2,7 +2,7 @@ use crate::constants;
 use crate::debug;
 use crate::time;
 
-// Models the CHIP-8 machine
+// Emulates the CHIP-8 machine
 pub struct Chip8 {
     // RAM memory: 4 kB
     pub ram: [u8; constants::RAM_SIZE],
@@ -143,7 +143,7 @@ impl Chip8 {
             let instr: u16 = ((self.ram[self.pc] as u16) << 8) | self.ram[self.pc + 1] as u16;
             self.pc += 2;
 
-            // INSTRUCTION: 0xIXYN // 0x00NN // 0x0NNN
+            // INSTRUCTION: 0xIXYN with 0x000N, 0x00NN, 0x0NNN
             let code = instr & 0xF000;
             let x = ((instr & 0x0F00) >> 8) as usize;
             let y = ((instr & 0x00F0) >> 4) as usize;
@@ -167,13 +167,31 @@ impl Chip8 {
             }
 
             match code {
-                // 00E0 - CLS
                 0x0000 => {
+                    match n {
+                        // 00E0 - CLS
+                        0 => (),
+                        // 00EE - RET
+                        0x0E => {
+                            self.pc = self.stack[self.istack] as usize;
+                            if self.istack > 0 {
+                                self.istack -= 1;
+                            }
+                        }
+                        // Default
+                        _ => (),
+                    }
                     self.display.iter_mut().for_each(|m| *m = 0);
                     self.display_clear_flag = true;
                 }
                 // 1NNN - JMP
                 0x1000 => self.pc = nnn as usize,
+                // 2NNN - CALL NNN
+                0x2000 => {
+                    self.istack += 1;
+                    self.stack[self.istack] = self.pc as u16;
+                    self.pc = nnn as usize;
+                }
                 // 6XNN - LD  VX, NN
                 0x6000 => self.registers[x] = nn as u8,
                 // 7XNN - ADD  VX, NN
@@ -181,15 +199,15 @@ impl Chip8 {
                 0x8000 => {
                     match n {
                         // 8XY0 - LD VX, VY
-                        0 => self.registers[x] = self.registers[y],
+                        0x00 => self.registers[x] = self.registers[y],
                         // 8XY1 - OR VX, VY
-                        1 => self.registers[x] = self.registers[x] | self.registers[y],
+                        0x01 => self.registers[x] = self.registers[x] | self.registers[y],
                         // 8XY2 - AND VX, VY
-                        2 => self.registers[x] = self.registers[x] & self.registers[y],
+                        0x02 => self.registers[x] = self.registers[x] & self.registers[y],
                         // 8XY3 - XOR VX, VY
-                        3 => self.registers[x] = self.registers[x] ^ self.registers[y],
+                        0x03 => self.registers[x] = self.registers[x] ^ self.registers[y],
                         // 8XY4 - ADD VX, VY
-                        4 => {
+                        0x04 => {
                             let res = self.registers[x] as usize + self.registers[y] as usize;
                             if res > 255 {
                                 // Carry to VF

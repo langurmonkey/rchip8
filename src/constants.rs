@@ -14,7 +14,5 @@ pub const N_REGISTERS: usize = 16;
 pub const DISPLAY_WIDTH: usize = 64;
 // Display height in pixels
 pub const DISPLAY_HEIGHT: usize = 32;
-// Scale factor for the display
-pub const DISPLAY_SCALE: usize = 10;
 // Total number of pixels in display
 pub const DISPLAY_LEN: usize = DISPLAY_WIDTH * DISPLAY_HEIGHT;

@@ -7,19 +7,20 @@ use sdl2::{render::Canvas, video::Window};
 pub struct Display {
     pub canvas: Canvas<Window>,
     pub event_pump: EventPump,
+    pub scale: u32,
     pub col: Color,
 }
 
 impl Display {
-    pub fn initialize(window_title: &str) -> Self {
+    pub fn initialize(window_title: &str, scale: u32) -> Self {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
         let event_pump = sdl_context.event_pump().unwrap();
         let window = video_subsystem
             .window(
                 window_title,
-                (constants::DISPLAY_WIDTH * constants::DISPLAY_SCALE) as u32,
-                (constants::DISPLAY_HEIGHT * constants::DISPLAY_SCALE) as u32,
+                constants::DISPLAY_WIDTH as u32 * scale,
+                constants::DISPLAY_HEIGHT as u32 * scale,
             )
             .position_centered()
             .build()
@@ -30,6 +31,7 @@ impl Display {
         Display {
             canvas,
             event_pump,
+            scale,
             col: Color::RGB(200, 200, 200),
         }
     }
@@ -45,7 +47,7 @@ impl Display {
     pub fn render(&mut self, buffer: [u8; constants::DISPLAY_LEN]) {
         // Fill with buffer
         self.canvas.set_draw_color(self.col);
-        let scl = constants::DISPLAY_SCALE;
+        let scl = self.scale as usize;
         for x in 0..constants::DISPLAY_WIDTH {
             for y in 0..constants::DISPLAY_HEIGHT {
                 if buffer[y * constants::DISPLAY_WIDTH + x] != 0 {
