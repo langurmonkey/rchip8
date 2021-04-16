@@ -50,7 +50,7 @@ fn main() {
                 .short("i")
                 .long("ips")
                 .takes_value(true)
-                .help("Emulation speed in instructions per second. Default value is 700."),
+                .help("Emulation speed in instructions per second. Default value is 1000."),
         )
         .get_matches();
 
@@ -74,9 +74,9 @@ fn main() {
     }
 
     // Emulation speed
-    let ips_str = matches.value_of("ips").unwrap_or("700");
+    let ips_str = matches.value_of("ips").unwrap_or("1000");
     let ips_res = ips_str.parse::<u128>();
-    let mut ips: u128 = 700;
+    let mut ips: u128 = 1000;
     match ips_res {
         Ok(n) => ips = n,
         Err(e) => println!(
@@ -88,6 +88,8 @@ fn main() {
 
     // Start time
     let start: u128 = time::time_nanos();
+
+    println!("R-CHIP-8 starting");
 
     // Create the display
     let mut display = Display::new("R-CHIP-8", scale);

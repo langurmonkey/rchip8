@@ -109,7 +109,7 @@ impl Chip8 {
             stack,
             istack,
             pc,
-            dt: 255,
+            dt,
             st,
             display,
             display_update_flag: false,
@@ -366,16 +366,14 @@ impl Chip8 {
                         // FX0A - LD VX, N  (wait for key press, store key value in VX)
                         0x0A => {
                             let keycode: u8 = loop {
-                                let mut code = None;
-                                for event in event_pump.poll_iter() {
-                                    code = match event {
-                                        Event::KeyUp {
-                                            keycode: Some(code),
-                                            ..
-                                        } => Some(code),
-                                        _ => None,
-                                    }
-                                }
+                                let event = event_pump.wait_event();
+                                let code = match event {
+                                    Event::KeyDown {
+                                        keycode: Some(code),
+                                        ..
+                                    } => Some(code),
+                                    _ => None,
+                                };
                                 if code.is_some() {
                                     let sc = Scancode::from_keycode(code.unwrap()).unwrap();
                                     if sc == Scancode::Escape || sc == Scancode::CapsLock {
