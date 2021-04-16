@@ -14,6 +14,7 @@ pub fn debug(
     registers: [u8; constants::N_REGISTERS],
     idx: u16,
 ) {
+    println!("");
     println!("L{:03x}:  {}", pc - 2, debug_instr(code, x, y, n, nn, nnn));
     println!("instr:       0x{:04x}", instr);
     println!(
@@ -24,7 +25,22 @@ pub fn debug(
         "V3: 0x{:04x}  V4: 0x{:04x}  V5: 0x{:04x}",
         registers[3], registers[4], registers[5]
     );
-    println!("I: 0x{:04x}", idx);
+    println!(
+        "V6: 0x{:04x}  V7: 0x{:04x}  V5: 0x{:08x}",
+        registers[6], registers[7], registers[8]
+    );
+    println!(
+        "V9: 0x{:04x}  VA: 0x{:04x}  VB: 0x{:08x}",
+        registers[9], registers[10], registers[11]
+    );
+    println!(
+        "VC: 0x{:04x}  VD: 0x{:04x}  VE: 0x{:08x}",
+        registers[12], registers[13], registers[14]
+    );
+    println!(
+        "VC: 0x{:04x}                I: 0x{:04x}",
+        registers[15], idx
+    );
     // println!("code:        0x{:04x}", code);
     // println!("x:           0x{:04x} ({})", x, x);
     // println!("y:           0x{:04x} ({})", y, y);

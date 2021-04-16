@@ -12,7 +12,7 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn initialize(window_title: &str, scale: u32) -> Self {
+    pub fn new(window_title: &str, scale: u32) -> Self {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
         let event_pump = sdl_context.event_pump().unwrap();
@@ -52,12 +52,14 @@ impl Display {
             for y in 0..constants::DISPLAY_HEIGHT {
                 if buffer[y * constants::DISPLAY_WIDTH + x] != 0 {
                     // Paint!
-                    self.canvas.fill_rect(Rect::new(
-                        (x * scl) as i32,
-                        (y * scl) as i32,
-                        scl as u32,
-                        scl as u32,
-                    ));
+                    self.canvas
+                        .fill_rect(Rect::new(
+                            (x * scl) as i32,
+                            (y * scl) as i32,
+                            scl as u32,
+                            scl as u32,
+                        ))
+                        .unwrap();
                 }
             }
         }

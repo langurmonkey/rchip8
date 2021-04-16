@@ -2,6 +2,7 @@ mod chip8;
 mod constants;
 mod debug;
 mod display;
+mod keyboard;
 mod time;
 
 extern crate clap;
@@ -12,7 +13,6 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::fs::File;
 use std::io::prelude::*;
-use std::{env, process};
 
 use chip8::Chip8;
 use display::Display;
@@ -43,7 +43,14 @@ fn main() {
                 .short("s")
                 .long("scale")
                 .takes_value(true)
-                .help("Set the integer scaling of the display, by default it is set to 15. If set to 1, the display is set to 64x32 pixels."),
+                .help("Integer display scaling, by default it is set to 15. If set to 1, the display is set to 64x32 pixels."),
+        )
+        .arg(
+            Arg::with_name("ips")
+                .short("i")
+                .long("ips")
+                .takes_value(true)
+                .help("Emulation speed in instructions per second. Default value is 700."),
         )
         .get_matches();
 
@@ -61,21 +68,34 @@ fn main() {
     match scl_res {
         Ok(n) => scale = n,
         Err(e) => println!(
-            "The scale ({}) is not a valid unsigned integer, using default",
-            scl_str
+            "The scale ({}) is not a valid unsigned integer, using default: {}",
+            scl_str, e
         ),
     }
+
+    // Emulation speed
+    let ips_str = matches.value_of("ips").unwrap_or("700");
+    let ips_res = ips_str.parse::<u128>();
+    let mut ips: u128 = 700;
+    match ips_res {
+        Ok(n) => ips = n,
+        Err(e) => println!(
+            "The ips ({}) is not a valid unsigned integer, using default: {}",
+            ips_str, e
+        ),
+    }
+    let instruction_time_ns: u128 = (1e9 as u128 / ips) as u128;
 
     // Start time
     let start: u128 = time::time_nanos();
 
     // Create the display
-    let mut display = Display::initialize("R-CHIP-8", scale);
+    let mut display = Display::new("R-CHIP-8", scale);
 
     // Create the machine
     let debug_mode = matches.occurrences_of("debug") > 0;
     println!("Debug: {}", debug_mode);
-    let mut chip8 = Chip8::initialize(rom, start, debug_mode);
+    let mut chip8 = Chip8::new(rom, start, instruction_time_ns, debug_mode);
 
     // Main loop
     'mainloop: loop {
@@ -94,7 +114,7 @@ fn main() {
         }
 
         // Run the machine
-        chip8.cycle(t);
+        chip8.cycle(t, &mut display.event_pump);
 
         // Clear/update display if needed
         if chip8.display_clear_flag {

@@ -1,6 +1,11 @@
 use crate::constants;
 use crate::debug;
-use crate::time;
+use crate::keyboard;
+
+use rand::random;
+use sdl2::event::Event;
+use sdl2::keyboard::Scancode;
+use sdl2::EventPump;
 
 // Emulates the CHIP-8 machine
 pub struct Chip8 {
@@ -14,18 +19,21 @@ pub struct Chip8 {
     pub stack: [u16; constants::STACK_SIZE],
     // Current index of the top of the stack
     pub istack: usize,
-    // Program counter
+    // Program counter (PC)
     pub pc: usize,
-    // Delay timer: 8 b
-    pub delay_timer: u8,
-    // Sound timer: 8 b
-    pub sound_timer: u8,
+    // Delay timer (DT): 8 b
+    pub dt: u8,
+    // Sound timer (ST): 8 b
+    pub st: u8,
     // Display memory
     pub display: [u8; constants::DISPLAY_LEN],
     // Flag: update display (draw has been called)
     pub display_update_flag: bool,
     // Flag: clear display
     pub display_clear_flag: bool,
+
+    // Emulation speed in instruction time [ns]
+    instruction_time_ns: u128,
     // Flag: run in debug mode
     debug_mode: bool,
     // Last timer time
@@ -36,7 +44,7 @@ pub struct Chip8 {
 
 impl Chip8 {
     // Initializes the machine with the given ROM data [Vec<u8>] and start time [ns]
-    pub fn initialize(rom: Vec<u8>, start_t: u128, debug_mode: bool) -> Self {
+    pub fn new(rom: Vec<u8>, start_t: u128, instruction_time_ns: u128, debug_mode: bool) -> Self {
         // Initialize the machine
 
         // RAM memory: 4 kB
@@ -52,9 +60,9 @@ impl Chip8 {
         // Program counter
         let pc: usize = constants::PROGRAM_LOC;
         // Delay timer: 8 b
-        let delay_timer: u8 = 0;
+        let dt: u8 = 0;
         // Sound timer: 8 b
-        let sound_timer: u8 = 0;
+        let st: u8 = 0;
         // Display memory
         let display: [u8; constants::DISPLAY_LEN] = [0; constants::DISPLAY_LEN];
 
@@ -100,11 +108,12 @@ impl Chip8 {
             stack,
             istack,
             pc,
-            delay_timer,
-            sound_timer,
+            dt,
+            st,
             display,
             display_update_flag: false,
             display_clear_flag: false,
+            instruction_time_ns,
             debug_mode,
             last_timer_t: start_t,
             last_instruction_t: start_t,
@@ -112,18 +121,18 @@ impl Chip8 {
     }
 
     // Runs a CPU cycle with the given current time t [ns]
-    pub fn cycle(&mut self, t: u128) {
+    pub fn cycle(&mut self, t: u128, event_pump: &mut EventPump) {
         self.display_update_flag = false;
         self.display_clear_flag = false;
         // TIMERS
         // Decrement delay_timer and sound_timer 60 times per second
         // if their value is > 0
         if t - self.last_timer_t > 16_666 {
-            if self.delay_timer > 0 {
-                self.delay_timer -= 1;
+            if self.dt > 0 {
+                self.dt -= 1;
             }
-            if self.sound_timer > 0 {
-                self.sound_timer -= 1;
+            if self.st > 0 {
+                self.st -= 1;
             }
             self.last_timer_t = t;
         }
@@ -135,7 +144,7 @@ impl Chip8 {
 
         // INTERPRET
 
-        if t - self.last_instruction_t > constants::INSTRUCTION_TIME_NS {
+        if t - self.last_instruction_t > self.instruction_time_ns {
             if self.pc >= constants::RAM_SIZE {
                 panic!("Reached the end!");
             }
@@ -170,7 +179,10 @@ impl Chip8 {
                 0x0000 => {
                     match n {
                         // 00E0 - CLS
-                        0 => (),
+                        0 => {
+                            self.display.iter_mut().for_each(|m| *m = 0);
+                            self.display_clear_flag = true;
+                        }
                         // 00EE - RET
                         0x0E => {
                             self.pc = self.stack[self.istack] as usize;
@@ -181,8 +193,6 @@ impl Chip8 {
                         // Default
                         _ => (),
                     }
-                    self.display.iter_mut().for_each(|m| *m = 0);
-                    self.display_clear_flag = true;
                 }
                 // 1NNN - JMP
                 0x1000 => self.pc = nnn as usize,
@@ -192,10 +202,28 @@ impl Chip8 {
                     self.stack[self.istack] = self.pc as u16;
                     self.pc = nnn as usize;
                 }
+                // 3XNN - SE VX, NN
+                0x3000 => {
+                    if self.registers[x] as u16 == nn {
+                        self.pc += 2;
+                    }
+                }
+                // 4XNN - SNE VX, NN
+                0x4000 => {
+                    if self.registers[x] as u16 != nn {
+                        self.pc += 2;
+                    }
+                }
+                // 5XY0 - SE VX, VY
+                0x5000 => {
+                    if self.registers[x] == self.registers[y] {
+                        self.pc += 2;
+                    }
+                }
                 // 6XNN - LD  VX, NN
                 0x6000 => self.registers[x] = nn as u8,
                 // 7XNN - ADD  VX, NN
-                0x7000 => self.registers[x] += nn as u8,
+                0x7000 => self.registers[x] = (self.registers[x] as u16 + nn) as u8,
                 0x8000 => {
                     match n {
                         // 8XY0 - LD VX, VY
@@ -217,12 +245,60 @@ impl Chip8 {
                             }
                             self.registers[x] = res as u8;
                         }
+                        // 8XY5 - SUB VX, VY
+                        0x05 => {
+                            self.registers[0x0F] = if self.registers[x] > self.registers[y] {
+                                // Carry to VF
+                                1
+                            } else {
+                                0
+                            };
+                            self.registers[x] =
+                                (self.registers[x] as i32 - self.registers[y] as i32) as u8;
+                        }
+                        // 8XY6 - SHR VX {, VY}
+                        0x06 => {
+                            self.registers[0x0F] = if self.registers[x] & 0x01 == 0x01 {
+                                1
+                            } else {
+                                0
+                            };
+                            self.registers[x] /= 2;
+                        }
+                        // 8XY7 - SUBN VX, VY
+                        0x07 => {
+                            self.registers[0x0F] = if self.registers[y] > self.registers[x] {
+                                1
+                            } else {
+                                0
+                            };
+                            self.registers[x] = self.registers[y] - self.registers[x];
+                        }
+                        // 8XYE - SHL VX {, VY}
+                        0x0E => {
+                            self.registers[0x0F] = if self.registers[x] & 0x80 == 0x01 {
+                                1
+                            } else {
+                                0
+                            };
+                            self.registers[x] = (self.registers[x] as u16 * 2) as u8;
+                        }
                         // Default
                         _ => (),
                     }
                 }
+                // 0x9XY0 - SNE VX, VY  (skip next instruction)
+                0x9000 => {
+                    if self.registers[x] != self.registers[y] {
+                        self.pc += 2;
+                    }
+                }
                 // ANNN - LD  I, NNN
                 0xA000 => self.index = nnn,
+                // BNNN - JMP  V0, NNN  (jump to nnn + V0)
+                0xB000 => self.pc = nnn as usize + self.registers[0] as usize,
+                // CXNN - RND VX, NN  (set VX = RANDOM_BYTE AND NN)
+                0xC000 => self.registers[x] = nn as u8 & random::<u8>(),
                 // DXYN - DRW  VX, VY, N
                 0xD000 => {
                     self.registers[0x0F] = 0;
@@ -263,6 +339,92 @@ impl Chip8 {
                         }
                     }
                     self.display_update_flag = true;
+                }
+                0xE000 => {
+                    match nn {
+                        // EX9E - SKP VX  (skip next instr if key with val VX is pressed)
+                        0x9E => {
+                            if event_pump
+                                .keyboard_state()
+                                .is_scancode_pressed(keyboard::map(self.registers[x]))
+                            {
+                                self.pc += 2;
+                            }
+                        }
+                        // EXA1 - SKNP VX  (skip next instr if key with val VX is not pressed)
+                        0xA1 => {
+                            if !event_pump
+                                .keyboard_state()
+                                .is_scancode_pressed(keyboard::map(self.registers[x]))
+                            {
+                                self.pc += 2;
+                            }
+                        }
+                        _ => (),
+                    }
+                }
+                0xF000 => {
+                    match nn {
+                        // FX07 - LD VX, DT  (set VX = delay timer)
+                        0x07 => self.registers[x] = self.dt,
+                        // FX0A - LD VX, N  (wait for key press, store key value in VX)
+                        0x0A => {
+                            let keycode: u8 = loop {
+                                let mut code = None;
+                                for event in event_pump.poll_iter() {
+                                    code = match event {
+                                        Event::KeyUp {
+                                            keycode: Some(code),
+                                            ..
+                                        } => Some(code),
+                                        _ => None,
+                                    }
+                                }
+                                if code.is_some() {
+                                    let sc = Scancode::from_keycode(code.unwrap()).unwrap();
+                                    let c = keyboard::unmap(sc);
+                                    if c.is_some() {
+                                        break c.unwrap();
+                                    }
+                                }
+                            };
+                            self.registers[x] = keycode;
+                        }
+                        // FX15 - LD DT, VX  (set delay timer = VX)
+                        0x15 => self.dt = self.registers[x],
+                        // FX18 - LD ST, VX  (set sound timer = VX)
+                        0x18 => self.st = self.registers[x],
+                        // FX1E - ADD I, VX
+                        0x1E => self.index = self.index + self.registers[x] as u16,
+                        // FX29 - LD F, VX  (set I to location of sprite for digit VX)
+                        0x29 => self.index = self.registers[x] as u16 * 0x05,
+                        // FX33 - LD B, VX  (store BCD representation of VX in I, I+1 and I+2)
+                        0x33 => {
+                            let num = self.registers[x];
+                            let h = num / 100;
+                            let t = (num - h * 100) / 10;
+                            let o = num - h * 100 - t * 10;
+                            let i = self.index as usize;
+                            self.ram[i] = h;
+                            self.ram[i + 1] = t;
+                            self.ram[i + 2] = o;
+                        }
+                        // FX55 - LD [I], VX  (set memory starting at I to values in V0 to VX)
+                        0x55 => {
+                            let n: usize = x;
+                            for reg in 0..n + 1 {
+                                self.ram[self.index as usize + reg] = self.registers[reg];
+                            }
+                        }
+                        // FX65 - LD VX, [I]  (set registers V0 to VX to memory starting at I)
+                        0x65 => {
+                            let n: usize = x;
+                            for reg in 0..n + 1 {
+                                self.registers[reg] = self.ram[self.index as usize + reg];
+                            }
+                        }
+                        _ => (),
+                    }
                 }
                 // Default
                 _ => (),

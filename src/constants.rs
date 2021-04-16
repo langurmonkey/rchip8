@@ -1,7 +1,3 @@
-// Emulation speed in instructions per second
-pub const SPEED_INSTRUCT_SEC: u128 = 700;
-pub const INSTRUCTION_TIME_NS: u128 = (1e9 as u128 / SPEED_INSTRUCT_SEC) as u128;
-
 pub const PROGRAM_LOC: usize = 0x200;
 
 // RAM size in B
