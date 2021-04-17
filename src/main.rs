@@ -43,7 +43,7 @@ fn main() {
                 .short("s")
                 .long("scale")
                 .takes_value(true)
-                .help("Integer display scale factor, defaults to 15"),
+                .help("Integer display scale factor, defaults to 10 (for 640x320 upscaled resolution)"),
         )
         .arg(
             Arg::with_name("ips")
@@ -62,9 +62,9 @@ fn main() {
     f.read_to_end(&mut rom).unwrap();
 
     // Scaling
-    let scl_str = matches.value_of("scale").unwrap_or("15");
+    let scl_str = matches.value_of("scale").unwrap_or("10");
     let scl_res = scl_str.parse::<u32>();
-    let mut scale: u32 = 15;
+    let mut scale: u32 = 10;
     match scl_res {
         Ok(n) => scale = n,
         Err(e) => println!(
