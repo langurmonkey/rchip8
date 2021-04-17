@@ -1,6 +1,7 @@
 use crate::constants;
 
 use sdl2::rect::Rect;
+use sdl2::Sdl;
 use sdl2::{pixels::Color, EventPump};
 use sdl2::{render::Canvas, video::Window};
 
@@ -13,8 +14,7 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn new(window_title: &str, scale: u32) -> Self {
-        let sdl_context = sdl2::init().unwrap();
+    pub fn new(sdl_context: &Sdl, window_title: &str, scale: u32) -> Self {
         let video_subsystem = sdl_context.video().unwrap();
         let event_pump = sdl_context.event_pump().unwrap();
         let window = video_subsystem

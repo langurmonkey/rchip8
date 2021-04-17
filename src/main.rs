@@ -1,3 +1,4 @@
+mod audio;
 mod chip8;
 mod constants;
 mod debug;
@@ -14,6 +15,7 @@ use sdl2::keyboard::Keycode;
 use std::fs::File;
 use std::io::prelude::*;
 
+use audio::Beep;
 use chip8::Chip8;
 use display::Display;
 
@@ -91,8 +93,14 @@ fn main() {
 
     println!("R-CHIP-8 starting");
 
+    // Init SDL2
+    let sdl_context = sdl2::init().unwrap();
+
     // Create the display
-    let mut display = Display::new("R-CHIP-8", scale);
+    let mut display = Display::new(&sdl_context, "R-CHIP-8", scale);
+
+    // Create audio beep
+    let beep = Beep::new(&sdl_context);
 
     // Create the machine
     let debug_mode = matches.occurrences_of("debug") > 0;
@@ -128,6 +136,11 @@ fn main() {
         }
         if chip8.display_update_flag {
             display.render(chip8.display);
+        }
+        if chip8.beep_flag {
+            beep.play();
+        } else {
+            beep.pause();
         }
     }
     println!("Bye!");

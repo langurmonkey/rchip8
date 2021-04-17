@@ -32,6 +32,8 @@ pub struct Chip8 {
     pub display_update_flag: bool,
     // Flag: clear display
     pub display_clear_flag: bool,
+    // Flag: beep
+    pub beep_flag: bool,
 
     // Emulation speed in instruction time [ns]
     instruction_time_ns: u128,
@@ -114,6 +116,7 @@ impl Chip8 {
             display,
             display_update_flag: false,
             display_clear_flag: false,
+            beep_flag: false,
             instruction_time_ns,
             debug_mode,
             last_timer_t: start_t,
@@ -134,6 +137,7 @@ impl Chip8 {
             }
             if self.st > 0 {
                 self.st -= 1;
+                self.beep_flag = self.st > 0;
             }
             self.last_timer_t = t;
         }
