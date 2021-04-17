@@ -9,6 +9,7 @@ The [cavern game](https://github.com/mattmikolay/chip-8/tree/master/cavern).
 ![](cavern.jpg)
 
 Find additional games and demos in the [CHIP-8 Archive](https://johnearnest.github.io/chip8Archive/) or in [this repository](https://github.com/dmatlack/chip8/tree/master/roms)
+
 ## Building
 
 To compile for release, just do:
