@@ -6,7 +6,7 @@ Results of running [this ROM](https://github.com/corax89/chip8-test-rom):
 
 ![](test-results.jpg)
 
-The [cavern game](https://github.com/mattmikolay/chip-8/tree/master/cavern).
+The [cavern game](https://github.com/mattmikolay/chip-8/tree/master/cavern):
 
 ![](cavern.jpg)
 
