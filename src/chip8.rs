@@ -258,11 +258,7 @@ impl Chip8 {
                         }
                         // 8XY6 - SHR VX {, VY}
                         0x06 => {
-                            self.registers[0x0F] = if self.registers[x] & 0x01 == 0x01 {
-                                1
-                            } else {
-                                0
-                            };
+                            self.registers[0x0F] = self.registers[x] & 0x01;
                             self.registers[x] /= 2;
                         }
                         // 8XY7 - SUBN VX, VY
@@ -276,11 +272,7 @@ impl Chip8 {
                         }
                         // 8XYE - SHL VX {, VY}
                         0x0E => {
-                            self.registers[0x0F] = if self.registers[x] & 0x80 == 0x01 {
-                                1
-                            } else {
-                                0
-                            };
+                            self.registers[0x0F] = self.registers[x] & 0x80;
                             self.registers[x] = (self.registers[x] as u16 * 2) as u8;
                         }
                         // Default
