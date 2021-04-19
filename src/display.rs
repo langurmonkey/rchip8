@@ -9,12 +9,18 @@ pub struct Display {
     pub canvas: Canvas<Window>,
     pub event_pump: EventPump,
     pub scale: u32,
-    pub col: Color,
+    pub fgcol: Color,
     pub bgcol: Color,
 }
 
 impl Display {
-    pub fn new(sdl_context: &Sdl, window_title: &str, scale: u32) -> Self {
+    pub fn new(
+        sdl_context: &Sdl,
+        window_title: &str,
+        scale: u32,
+        fg_col: (u8, u8, u8),
+        bg_col: (u8, u8, u8),
+    ) -> Self {
         let video_subsystem = sdl_context.video().unwrap();
         let event_pump = sdl_context.event_pump().unwrap();
         let window = video_subsystem
@@ -33,8 +39,8 @@ impl Display {
             canvas,
             event_pump,
             scale,
-            col: Color::RGB(50, 130, 195),
-            bgcol: Color::RGB(30, 30, 30),
+            fgcol: Color::RGB(fg_col.0, fg_col.1, fg_col.2),
+            bgcol: Color::RGB(bg_col.0, bg_col.1, bg_col.2),
         }
     }
 
@@ -53,7 +59,7 @@ impl Display {
             for y in 0..constants::DISPLAY_HEIGHT {
                 if buffer[y * constants::DISPLAY_WIDTH + x] > 0 {
                     // Foreground
-                    self.canvas.set_draw_color(self.col);
+                    self.canvas.set_draw_color(self.fgcol);
                     self.canvas
                         .fill_rect(Rect::new(
                             (x * scl) as i32,

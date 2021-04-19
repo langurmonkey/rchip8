@@ -38,6 +38,18 @@ cargo run --release -- [ROM_FILE]
 
 This implementation supports an integer display scale factor to make the display larger. Use it with `-s [FACTOR]`.
 
+## Colors
+
+You can specify the foreground color as a hex string with `-c` or `--fgcol`.
+
+You can specify the background color as a hex string with `-b` or `--bgcol`.
+
+For example:
+
+```bash
+rchip -c ABABAB -b 030303
+```
+
 ## Debug
 
 Enable debug mode with `-d`. In this mode, the program halts before every instruction and prints the instruction itself, the decoded operation, the value of each register and the value of the index I.
@@ -64,9 +76,10 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -i, --ips <ips>        Emulation speed in instructions per second. Default value is 1000.
-    -s, --scale <scale>    Integer display scaling, by default it is set to 15. If set to 1, the display is set to 64x32
-                           pixels.
+    -b, --bgcol <bgcol>    Background (off) color as a hex code, defaults to 101020
+    -c, --fgcol <fgcol>    Foreground (on) color as a hex code, defaults to ABAECB
+    -i, --ips <ips>        Emulation speed in instructions per second, defaults to 1000
+    -s, --scale <scale>    Integer display scaling, defaults to 10 (for 640x320 upscaled resolution)
 
 ARGS:
     <input>    ROM file to load and run.

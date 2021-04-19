@@ -1,4 +1,16 @@
+// Starting address of user programs
 pub const PROGRAM_LOC: usize = 0x200;
+
+// Default foreground color
+pub const DEF_FG_COL: &str = "ABAECB";
+pub const DEF_FG: (u8, u8, u8) = (171, 171, 203);
+// Default background color
+pub const DEF_BG_COL: &str = "101020";
+pub const DEF_BG: (u8, u8, u8) = (16, 16, 32);
+// Default number of instructions per second
+pub const DEF_IPS: u32 = 1000;
+// Default screen scale factor
+pub const DEF_SCALE: u32 = 10;
 
 // RAM size in B
 pub const RAM_SIZE: usize = 4096;
