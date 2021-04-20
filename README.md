@@ -1,6 +1,6 @@
 # rCHIP8, a CHIP-8 emulator
 
-**rCHIP8** is a [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator written in Rust and SDL2.
+**rCHIP8** is a [CHIP-8](https://tonisagrista.com/blog/2021/chip8-spec) emulator written in Rust and SDL2.
 
 Results of running [this ROM](https://github.com/corax89/chip8-test-rom):
 
@@ -34,11 +34,11 @@ Or you can just run it with cargo, with the `--release` target enabled:
 cargo run --release -- [ROM_FILE]
 ```
 
-## Display scaling
+### Display scaling
 
 This implementation supports an integer display scale factor to make the display larger. Use it with `-s [FACTOR]`.
 
-## Colors
+### Colors
 
 You can specify the foreground color as a hex string with `-c` or `--fgcol`.
 
@@ -50,11 +50,11 @@ For example:
 rchip -c ABABAB -b 030303
 ```
 
-## Debug
+### Debug
 
 Enable debug mode with `-d`. In this mode, the program halts before every instruction and prints the instruction itself, the decoded operation, the value of each register and the value of the index I.
 
-## Speed
+### Speed
 
 You can change the emulation speed in instructions per second with `-i [IPS]`. The default value is 1000.
 
