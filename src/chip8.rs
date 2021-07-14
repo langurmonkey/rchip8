@@ -143,7 +143,6 @@ impl Chip8 {
         }
 
         // INTERPRET
-
         if t - self.last_instruction_t > self.instruction_time_ns {
             if self.pc >= constants::RAM_SIZE {
                 panic!("Reached the end!");
