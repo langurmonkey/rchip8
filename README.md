@@ -1,6 +1,7 @@
 # rCHIP8, a CHIP-8 emulator
 
 **rCHIP8** is a [CHIP-8](https://tonisagrista.com/blog/2021/chip8-spec) emulator written in Rust and SDL2.
+A writeup about this implementation can be found [in my blog](https://tonisagrista.com/blog/2021/chip8-implementation).
 
 Results of running [this ROM](https://github.com/corax89/chip8-test-rom):
 

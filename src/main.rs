@@ -176,6 +176,8 @@ fn main() {
         if chip8.display_update_flag {
             display.render(chip8.display);
         }
+
+        // Play/pause the beep
         if chip8.beep_flag {
             beep.play();
         } else {
