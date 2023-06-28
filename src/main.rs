@@ -32,14 +32,14 @@ fn main() {
             Arg::new("input")
                 .required(true)
                 .index(1)
-                .help("ROM file to load and run")
+                .help("ROM file to load and run.")
         )
         .arg(
             Arg::new("debug")
                 .short('d')
                 .long("debug")
                 .action(clap::ArgAction::SetTrue)
-                .help("Run in debug mode. Pauses after each instruction, prints info to stdout")
+                .help("Run in debug mode. Pauses after each instruction, prints info to stdout.")
         )
         .arg(
             Arg::new("scale")
@@ -47,7 +47,7 @@ fn main() {
                 .long("scale")
                 .value_parser(clap::value_parser!(u32))
                 .default_value(constants::DEF_SCALE_STR)
-                .help(&format!("Unsigned integer display scale factor, defaults to {} (for 640x320 upscaled resolution)", constants::DEF_SCALE_STR))
+                .help(&format!("Integer display scale factor."))
         )
         .arg(
             Arg::new("ips")
@@ -55,14 +55,14 @@ fn main() {
                 .long("ips")
                 .value_parser(clap::value_parser!(u32))
                 .default_value(constants::DEF_IPS_STR)
-                .help(&format!("Emulation speed in instructions per second, defaults to {}", constants::DEF_IPS_STR))
+                .help(&format!("Emulation speed in instructions per second."))
         )
         .arg(
             Arg::new("fgcol")
                 .short('c')
                 .long("fgcol")
                 .default_value(constants::DEF_FG_COL)
-                .help(&format!("Foreground (on) color as a hex code, defaults to {}", constants::DEF_FG_COL))
+                .help(&format!("Foreground (on) color as a hex code."))
         )
         .arg(
             Arg::new("bgcol")
@@ -70,7 +70,7 @@ fn main() {
                 .long("bgcol")
                 .default_value(constants::DEF_BG_COL)
                 .value_parser(clap::builder::NonEmptyStringValueParser::new())
-                .help(&format!("Background (off) color as a hex code, defaults to {}", constants::DEF_BG_COL))
+                .help(&format!("Background (off) color as a hex code."))
         )
         .get_matches();
 
