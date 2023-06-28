@@ -1,13 +1,15 @@
 [package]
 name = "rchip8"
 version = "0.1.0"
-authors = ["langurmonkey <me@tonisagrista.com>"]
-edition = "2018"
+description = "CHIP-9 emulator"
+readme = "README.md"
+authors = ["Toni Sagrsità Sellés <me@tonisagrista.com>"]
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sdl2 = "*"
-clap = "*"
-rand = "*"
-hex  = "*"
+sdl2 = "0.35.*"
+clap = "4.3.8"
+rand = "0.8.5"
+hex  = "0.4.3"

@@ -8,9 +8,9 @@ pub const DEF_FG: (u8, u8, u8) = (171, 171, 203);
 pub const DEF_BG_COL: &str = "101020";
 pub const DEF_BG: (u8, u8, u8) = (16, 16, 32);
 // Default number of instructions per second
-pub const DEF_IPS: u32 = 1000;
+pub const DEF_IPS_STR: &str = "1000";
 // Default screen scale factor
-pub const DEF_SCALE: u32 = 10;
+pub const DEF_SCALE_STR: &str = "10";
 
 // RAM size in B
 pub const RAM_SIZE: usize = 4096;
